@@ -1,4 +1,3 @@
 #!/bin/bash
 
-export CHROME_BUNDLE_IDENTIFIER="company.thebrowser.Browser"
-chrome-cli "$@"
+chrome-cli --bundle-id "company.thebrowser.Browser" "$@"
