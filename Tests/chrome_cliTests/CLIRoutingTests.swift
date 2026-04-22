@@ -109,16 +109,12 @@ final class CLIRoutingTests: XCTestCase {
         }
     }
 
-    func testTabsHelpFlagReturnsCleanExit() {
-        XCTAssertThrowsError(try ChromeCLI.parseAsRoot(["tabs", "--help"])) { error in
-            XCTAssertTrue(error is CleanExit)
-        }
+    func testTabsHelpFlagParsesSuccessfully() {
+        XCTAssertNoThrow(try ChromeCLI.parseAsRoot(["tabs", "--help"]))
     }
 
-    func testNestedCommandHelpFlagReturnsCleanExit() {
-        XCTAssertThrowsError(try ChromeCLI.parseAsRoot(["tabs", "list", "--help"])) { error in
-            XCTAssertTrue(error is CleanExit)
-        }
+    func testNestedCommandHelpFlagParsesSuccessfully() {
+        XCTAssertNoThrow(try ChromeCLI.parseAsRoot(["tabs", "list", "--help"]))
     }
 }
 
