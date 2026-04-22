@@ -60,6 +60,42 @@ final class ScriptingBridgeTabAutomationTests: XCTestCase {
         XCTAssertEqual(window.setActiveTabIndices, [1])
         XCTAssertEqual(window.bringToFrontCalls, 1)
     }
+
+    func testActivateTabThrowsBrowserUnavailableWhenBrowserIsNotRunning() {
+        let browser = FakeBrowser(isRunning: false, windowsResult: [])
+        let automation = ScriptingBridgeTabAutomation(bundleId: "com.brave.Browser", browser: browser)
+        let service = TabService(
+            browser: BrowserTarget(bundleId: "com.brave.Browser"),
+            automation: automation
+        )
+
+        XCTAssertThrowsError(try service.activateTab(windowId: 7, tabId: 10)) { error in
+            guard case let .browserUnavailable(message) = (error as? CLIError) else {
+                XCTFail("Expected browserUnavailable")
+                return
+            }
+            XCTAssertTrue(message.contains("com.brave.Browser"))
+            XCTAssertTrue(message.contains("not running"))
+        }
+    }
+
+    func testCloseTabThrowsBrowserUnavailableWhenBrowserIsNotRunning() {
+        let browser = FakeBrowser(isRunning: false, windowsResult: [])
+        let automation = ScriptingBridgeTabAutomation(bundleId: "com.brave.Browser", browser: browser)
+        let service = TabService(
+            browser: BrowserTarget(bundleId: "com.brave.Browser"),
+            automation: automation
+        )
+
+        XCTAssertThrowsError(try service.closeTab(windowId: 7, tabId: 10)) { error in
+            guard case let .browserUnavailable(message) = (error as? CLIError) else {
+                XCTFail("Expected browserUnavailable")
+                return
+            }
+            XCTAssertTrue(message.contains("com.brave.Browser"))
+            XCTAssertTrue(message.contains("not running"))
+        }
+    }
 }
 
 private final class FakeBrowser: BrowserScripting {

@@ -14,7 +14,7 @@ enum DebugLog {
             if rawPath.isEmpty {
                 filePath = "/tmp/chrome-cli.debug.log"
             } else {
-                filePath = rawPath
+                filePath = (rawPath as NSString).expandingTildeInPath
             }
         }
 
@@ -62,7 +62,6 @@ enum DebugLog {
         }
 
         FileHandle.standardError.write(data)
-        fflush(stderr)
     }
 
     private static func ensureLogFileExists(atPath path: String) {

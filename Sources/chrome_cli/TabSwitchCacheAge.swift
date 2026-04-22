@@ -63,7 +63,7 @@ enum TabSwitchCacheAge {
         }
 
         let months = days / 30
-        if months < 12 {
+        if days < 365 {
             return "\(months)mo ago"
         }
 

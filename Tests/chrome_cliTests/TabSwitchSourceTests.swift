@@ -152,6 +152,34 @@ final class TabSwitchSourceTests: XCTestCase {
         XCTAssertEqual(finalRows.map(\ .compositeId), ["2:2"])
     }
 
+    func testEmitRowsContinuesWhenFinalCacheWriteFails() throws {
+        let temp = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let invalidCacheRoot = temp.appendingPathComponent("xdg-as-file")
+        FileManager.default.createFile(atPath: invalidCacheRoot.path, contents: Data())
+
+        let cache = TabSwitchCache(
+            bundleId: "com.brave.Browser",
+            environment: ["XDG_CACHE_HOME": invalidCacheRoot.path]
+        )
+
+        let service = SwitchSourceService(
+            streamedTabs: [
+                TabRecord(windowId: 4, windowName: "W", tabId: 9, title: "Title", url: "https://example.com")
+            ]
+        )
+
+        var emitted: [String] = []
+        let source = TabSwitchSource(service: service, cache: cache) { line in
+            emitted.append(line)
+        }
+
+        XCTAssertNoThrow(try source.emitRowsToStdoutLive())
+        XCTAssertEqual(emitted.count, 1)
+        XCTAssertEqual(TabSwitchRow.parse(tsvLine: emitted[0])?.compositeId, "4:9")
+    }
+
     private func makeTempDirectory() throws -> URL {
         let temp = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("chrome-cli-tests-\(UUID().uuidString)", isDirectory: true)

@@ -15,7 +15,7 @@ struct ToolLocator {
         self.fallbackSearchPaths = fallbackSearchPaths
     }
 
-    func require(tool: String) throws -> String {
+    func require(tool: String, hint: String? = nil) throws -> String {
         if tool.contains("/") {
             if fileManager.isExecutableFile(atPath: tool) {
                 return tool
@@ -30,8 +30,9 @@ struct ToolLocator {
             }
         }
 
+        let trailingHint = hint ?? "Install it or add it to PATH."
         throw CLIError.scriptFailure(
-            "Required tool '\(tool)' was not found in PATH. Install it to use tabs switch."
+            "Required tool '\(tool)' was not found in PATH. \(trailingHint)"
         )
     }
 

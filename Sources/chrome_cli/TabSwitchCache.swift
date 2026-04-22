@@ -39,7 +39,7 @@ struct TabSwitchCache {
 
         let content = try String(contentsOf: cacheFileURL, encoding: .utf8)
         return content
-            .split(whereSeparator: \ .isNewline)
+            .split(whereSeparator: \.isNewline)
             .compactMap { TabSwitchRow.parse(tsvLine: String($0)) }
     }
 
@@ -47,7 +47,7 @@ struct TabSwitchCache {
         let directory = cacheFileURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
 
-        let payload = rows.map(\ .tsvLine).joined(separator: "\n") + (rows.isEmpty ? "" : "\n")
+        let payload = rows.map(\.tsvLine).joined(separator: "\n") + (rows.isEmpty ? "" : "\n")
         try payload.write(to: cacheFileURL, atomically: true, encoding: .utf8)
     }
 

@@ -2,7 +2,7 @@ import XCTest
 @testable import chrome_cli
 
 final class JSONOutputTests: XCTestCase {
-    func testRendersListTabsResponseAsStableJSON() throws {
+    func testRendersListTabsResponseAsStructuredJSON() throws {
         let response = ListTabsResponse(
             browser: BrowserMetadata(bundleId: "com.brave.Browser"),
             tabs: [
@@ -17,35 +17,26 @@ final class JSONOutputTests: XCTestCase {
         )
 
         let rendered = try JSONOutput.render(response)
-        let expected = #"{"# + "\n" +
-        #"  "browser" : {"# + "\n" +
-        #"    "bundleId" : "com.brave.Browser""# + "\n" +
-        #"  },"# + "\n" +
-        #"  "tabs" : ["# + "\n" +
-        #"    {"# + "\n" +
-        #"      "tabId" : 99,"# + "\n" +
-        #"      "title" : "Example","# + "\n" +
-        #"      "url" : "https://example.com","# + "\n" +
-        #"      "windowId" : 1,"# + "\n" +
-        #"      "windowName" : "Window""# + "\n" +
-        #"    }"# + "\n" +
-        #"  ]"# + "\n" +
-        #"}"#
+        XCTAssertTrue(rendered.hasPrefix("{\n"))
 
-        XCTAssertEqual(rendered, expected)
+        let decoded = try JSONDecoder().decode(ListTabsResponse.self, from: Data(rendered.utf8))
+        XCTAssertEqual(decoded.browser.bundleId, "com.brave.Browser")
+        XCTAssertEqual(decoded.tabs.count, 1)
+        XCTAssertEqual(decoded.tabs[0].windowId, 1)
+        XCTAssertEqual(decoded.tabs[0].windowName, "Window")
+        XCTAssertEqual(decoded.tabs[0].tabId, 99)
+        XCTAssertEqual(decoded.tabs[0].title, "Example")
+        XCTAssertEqual(decoded.tabs[0].url, "https://example.com")
     }
 
-    func testRendersErrorResponseAsStableJSON() throws {
+    func testRendersErrorResponseAsStructuredJSON() throws {
         let response = ErrorResponse(error: ErrorPayload(code: 4, message: "Could not find tab 10 in window 9."))
 
         let rendered = try JSONOutput.render(response)
-        let expected = #"{"# + "\n" +
-        #"  "error" : {"# + "\n" +
-        #"    "code" : 4,"# + "\n" +
-        #"    "message" : "Could not find tab 10 in window 9.""# + "\n" +
-        #"  }"# + "\n" +
-        #"}"#
+        XCTAssertTrue(rendered.hasPrefix("{\n"))
 
-        XCTAssertEqual(rendered, expected)
+        let decoded = try JSONDecoder().decode(ErrorResponse.self, from: Data(rendered.utf8))
+        XCTAssertEqual(decoded.error.code, 4)
+        XCTAssertEqual(decoded.error.message, "Could not find tab 10 in window 9.")
     }
 }

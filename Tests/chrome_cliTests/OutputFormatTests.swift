@@ -10,4 +10,9 @@ final class OutputFormatTests: XCTestCase {
         XCTAssertEqual(OutputFormat.from(environment: ["OUTPUT_FORMAT": "json"]), .json)
         XCTAssertEqual(OutputFormat.from(environment: ["OUTPUT_FORMAT": "JSON"]), .json)
     }
+
+    func testOutputFormatTrimsWhitespaceAndFallsBackToText() {
+        XCTAssertEqual(OutputFormat.from(environment: ["OUTPUT_FORMAT": "  json\n"]), .json)
+        XCTAssertEqual(OutputFormat.from(environment: ["OUTPUT_FORMAT": "yaml"]), .text)
+    }
 }

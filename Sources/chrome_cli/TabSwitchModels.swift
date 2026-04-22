@@ -96,7 +96,7 @@ struct TabSwitchRow: Equatable {
     }
 
     private static func stripANSI(_ input: String) -> String {
-        let ansiPattern = #"\u{001B}\[[0-9;]*m"#
+        let ansiPattern = "\u{1B}\\[[0-9;]*m"
         return input.replacingOccurrences(of: ansiPattern, with: "", options: .regularExpression)
     }
 }

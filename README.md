@@ -13,7 +13,7 @@ This release is a strict Swift rewrite (SwiftPM only) and uses native Apple Even
 ## Build
 
 ```bash
-swift build -c release
+make release
 ```
 
 Binary path:
@@ -90,8 +90,11 @@ Interactive fuzzy picker powered by `fzf`.
 ### `version`
 
 ```text
-2.0.0
+v2.0.0-3-gabc1234
 ```
+
+`make build`/`make release` inject version metadata from `git describe --tags --always --dirty`.
+If no git metadata is available, the fallback version is `dev`.
 
 ## Error Contract
 

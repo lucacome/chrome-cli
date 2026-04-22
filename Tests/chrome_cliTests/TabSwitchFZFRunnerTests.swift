@@ -90,6 +90,8 @@ final class TabSwitchFZFRunnerTests: XCTestCase {
         XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 3_600), "1h ago")
         XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 86_400), "1d ago")
         XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 2_592_000), "1mo ago")
+        XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 31_104_000), "12mo ago")
+        XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 31_449_600), "12mo ago")
         XCTAssertEqual(TabSwitchFZFRunner.relativeAgeLabel(seconds: 31_536_000), "1y ago")
     }
 

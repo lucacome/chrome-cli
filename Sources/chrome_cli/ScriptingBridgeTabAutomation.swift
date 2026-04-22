@@ -199,7 +199,7 @@ final class ScriptingBridgeTabAutomation: TabAutomating {
     func activateTab(windowId: Int, tabId: Int) throws -> Bool {
         guard browser.isRunning else {
             DebugLog.write("automation activateTab: browser not running bundleId=\(bundleId)")
-            return false
+            throw CLIError.browserUnavailable("Browser '\(bundleId)' is not running.")
         }
 
         DebugLog.write("automation activateTab: begin windowId=\(windowId) tabId=\(tabId) bundleId=\(bundleId)")
@@ -257,7 +257,7 @@ final class ScriptingBridgeTabAutomation: TabAutomating {
     func closeTab(windowId: Int, tabId: Int) throws -> Bool {
         guard browser.isRunning else {
             DebugLog.write("automation closeTab: browser not running bundleId=\(bundleId)")
-            return false
+            throw CLIError.browserUnavailable("Browser '\(bundleId)' is not running.")
         }
 
         DebugLog.write("automation closeTab: begin windowId=\(windowId) tabId=\(tabId) bundleId=\(bundleId)")

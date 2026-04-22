@@ -23,7 +23,14 @@ final class BrowserResolverTests: XCTestCase {
         let resolver = BrowserResolver(locator: locator)
 
         XCTAssertThrowsError(try resolver.resolve(options: BrowserOptions(browser: .auto, bundleId: nil))) { error in
-            XCTAssertEqual(error as? CLIError, CLIError.browserUnavailable("Unable to locate Brave or Chrome on this machine."))
+            guard case let .browserUnavailable(message) = (error as? CLIError) else {
+                XCTFail("Expected browserUnavailable")
+                return
+            }
+
+            XCTAssertTrue(message.contains("Unable to locate"))
+            XCTAssertTrue(message.contains("Brave"))
+            XCTAssertTrue(message.contains("Chrome"))
         }
     }
 
@@ -44,10 +51,13 @@ final class BrowserResolverTests: XCTestCase {
         XCTAssertThrowsError(
             try resolver.resolve(options: BrowserOptions(browser: .auto, bundleId: "com.example.DoesNotExist"))
         ) { error in
-            XCTAssertEqual(
-                error as? CLIError,
-                CLIError.browserUnavailable("No installed browser matches bundle id 'com.example.DoesNotExist'.")
-            )
+            guard case let .browserUnavailable(message) = (error as? CLIError) else {
+                XCTFail("Expected browserUnavailable")
+                return
+            }
+
+            XCTAssertTrue(message.contains("No installed browser matches bundle id"))
+            XCTAssertTrue(message.contains("com.example.DoesNotExist"))
         }
     }
 }

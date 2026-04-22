@@ -3,10 +3,10 @@ import Darwin
 import Foundation
 
 enum RuntimeEnvironment {
-    static var makeTabService: (BrowserOptions) throws -> TabServicing = defaultTabServiceFactory
-    static var runTabsSwitch: (_ service: TabServicing) throws -> Void = defaultTabsSwitchRunner
-    static var isInteractiveTerminal: () -> Bool = defaultIsInteractiveTerminal
-    static var outputFormat: () -> OutputFormat = defaultOutputFormat
+    nonisolated(unsafe) static var makeTabService: (BrowserOptions) throws -> TabServicing = defaultTabServiceFactory
+    nonisolated(unsafe) static var runTabsSwitch: (_ service: TabServicing) throws -> Void = defaultTabsSwitchRunner
+    nonisolated(unsafe) static var isInteractiveTerminal: () -> Bool = defaultIsInteractiveTerminal
+    nonisolated(unsafe) static var outputFormat: () -> OutputFormat = defaultOutputFormat
 
     static func reset() {
         makeTabService = defaultTabServiceFactory
@@ -27,8 +27,8 @@ enum RuntimeEnvironment {
     private static func defaultTabsSwitchRunner(service: TabServicing) throws {
         DebugLog.write("tabs switch: resolving tools bundleId=\(service.browserMetadata.bundleId)")
         let locator = ToolLocator()
-        let fzfPath = try locator.require(tool: "fzf")
-        let pbcopyPath = try locator.require(tool: "pbcopy")
+        let fzfPath = try locator.require(tool: "fzf", hint: "Install it to use tabs switch.")
+        let pbcopyPath = try locator.require(tool: "pbcopy", hint: "Install it to copy selected values from tabs switch.")
         DebugLog.write("tabs switch: using fzfPath=\(fzfPath) pbcopyPath=\(pbcopyPath)")
 
         let runner = TabSwitchFZFRunner(fzfPath: fzfPath, pbcopyPath: pbcopyPath)
@@ -49,7 +49,7 @@ enum RuntimeEnvironment {
 
 @main
 struct ChromeCLI: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "chrome-cli",
         abstract: "Control Chromium browsers from the command line.",
         subcommands: [
@@ -65,7 +65,7 @@ struct ChromeCLI: ParsableCommand {
     @Option(name: .long, help: "Override browser bundle id (takes precedence over --browser).")
     var bundleId: String?
 
-    private static var invocationOptions: BrowserOptions = .default
+    nonisolated(unsafe) private static var invocationOptions: BrowserOptions = .default
 
     static var currentBrowserOptions: BrowserOptions {
         invocationOptions
@@ -107,7 +107,7 @@ struct ChromeCLI: ParsableCommand {
 }
 
 struct TabsCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "tabs",
         abstract: "Tab operations.",
         subcommands: [
@@ -128,7 +128,7 @@ struct TabsCommand: ParsableCommand {
 }
 
 struct TabsListCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "list",
         abstract: "List tabs across all windows."
     )
@@ -150,7 +150,7 @@ struct TabsListCommand: ParsableCommand {
 }
 
 struct TabsActivateCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "activate",
         abstract: "Activate and focus a tab by composite id."
     )
@@ -175,7 +175,7 @@ struct TabsActivateCommand: ParsableCommand {
 }
 
 struct TabsCloseCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "close",
         abstract: "Close a tab by composite id."
     )
@@ -200,7 +200,7 @@ struct TabsCloseCommand: ParsableCommand {
 }
 
 struct TabsSwitchCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "switch",
         abstract: "Interactively fuzzy-search tabs and activate them."
     )
@@ -218,7 +218,7 @@ struct TabsSwitchCommand: ParsableCommand {
 }
 
 struct TabsSwitchSourceCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "_switch-source",
         abstract: "Internal helper command for tabs switch.",
         shouldDisplay: false
@@ -241,7 +241,7 @@ struct TabsSwitchSourceCommand: ParsableCommand {
 }
 
 struct TabsSwitchRefreshCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "_switch-refresh",
         abstract: "Internal helper command to refresh tabs switch cache.",
         shouldDisplay: false
@@ -264,7 +264,7 @@ struct TabsSwitchRefreshCommand: ParsableCommand {
 }
 
 struct TabsSwitchSourceLiveCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "_switch-source-live",
         abstract: "Internal helper command for live tabs switch source.",
         shouldDisplay: false
@@ -287,7 +287,7 @@ struct TabsSwitchSourceLiveCommand: ParsableCommand {
 }
 
 struct TabsSwitchHeaderCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "_switch-header",
         abstract: "Internal helper command for tabs switch header.",
         shouldDisplay: false
@@ -308,7 +308,7 @@ struct TabsSwitchHeaderCommand: ParsableCommand {
 }
 
 struct VersionCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "version",
         abstract: "Print the chrome-cli version."
     )
@@ -325,7 +325,7 @@ struct VersionCommand: ParsableCommand {
 }
 
 struct HelpCommand: ParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "help",
         abstract: "Show all available commands."
     )

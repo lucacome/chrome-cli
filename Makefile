@@ -29,7 +29,13 @@ help:
 
 version-file:
 	@mkdir -p "$(dir $(VERSION_FILE))"
-	@printf 'enum BuildVersion { static let value = "%s" }\n' "$(VERSION)" > "$(VERSION_FILE)"
+	@tmp_file="$$(mktemp)"; \
+	printf 'enum BuildVersion { static let value = "%s" }\n' "$(VERSION)" > "$$tmp_file"; \
+	if [ ! -f "$(VERSION_FILE)" ] || ! cmp -s "$$tmp_file" "$(VERSION_FILE)"; then \
+		mv "$$tmp_file" "$(VERSION_FILE)"; \
+	else \
+		rm -f "$$tmp_file"; \
+	fi
 
 build: version-file
 	$(SWIFT) build

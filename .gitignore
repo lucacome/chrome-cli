@@ -30,4 +30,3 @@ Pods/
 *.1
 
 .vscode
-Sources/chrome_cli/BuildVersion.generated.swift

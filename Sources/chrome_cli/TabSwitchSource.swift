@@ -91,7 +91,11 @@ struct TabSwitchSource {
             }
         }
 
-        try cache.writeRows(freshRows)
+        do {
+            try cache.writeRows(freshRows)
+        } catch {
+            DebugLog.write("\(logPrefix): final cache write failed count=\(freshRows.count) error=\(error.localizedDescription)")
+        }
         DebugLog.write(
             "\(logPrefix): done streamedTabs=\(streamedTabs) emittedRows=\(emittedRows) emittedFreshRows=\(emittedFreshRows) freshRowsForCache=\(freshRows.count) cachePath=\(cache.fileURL.path)"
         )
