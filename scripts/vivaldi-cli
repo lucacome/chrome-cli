@@ -1,4 +1,3 @@
 #!/bin/bash
 
-export CHROME_BUNDLE_IDENTIFIER="com.vivaldi.Vivaldi"
-chrome-cli "$@"
+chrome-cli --bundle-id "com.vivaldi.Vivaldi" "$@"

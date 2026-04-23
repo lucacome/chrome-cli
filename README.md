@@ -2,168 +2,189 @@
 
 ## Overview
 
-chrome-cli is a command line utility for controlling Google Chrome compatible browsers on OS X.
-It is a native binary that uses the Scripting Bridge to communicate with Chrome.
-chrome-cli has been tested with the following browsers:
+`chrome-cli` is a native Swift command line tool for controlling Chromium-based browsers on macOS.
+This release is a strict Swift rewrite (SwiftPM only) and uses native Apple Events via ScriptingBridge.
 
-- Chrome
-- Chrome Canary
-- Chromium
-- Brave
-- Vivaldi
-- Edge
-- Arc
+## Requirements
 
-### Other browsers
+- macOS 13.0+
+- Swift 5.10+
 
-By default chrome-cli communicates with Chrome, but you can use it with other browsers by settings
-the `CHROME_BUNDLE_IDENTIFIER` environment variable. I.e. to use chrome-cli with Brave you can run the following command:
+## Build
 
 ```bash
-CHROME_BUNDLE_IDENTIFIER="com.brave.Browser" chrome-cli list tabs
+make release
 ```
 
-Check the [scripts directory](scripts) for some convenient wrappers.
-
-#### How do I find the bundle identifier?
-
-The following command will print out the bundle identifier for Brave
+Binary path:
 
 ```bash
-mdls -name kMDItemCFBundleIdentifier -raw /Applications/Brave\ Browser.app
+.build/release/chrome-cli
 ```
 
-## Installation
+## Browser Resolution
 
-#### Homebrew
+`chrome-cli` resolves the target browser using the following order:
+
+1. `--bundle-id` (explicit override)
+2. `--browser brave|chrome`
+3. `--browser auto` (default): Brave first, Chrome fallback
+
+Examples:
 
 ```bash
-brew install chrome-cli
+chrome-cli --browser auto tabs list
+chrome-cli --browser chrome tabs list
+chrome-cli --bundle-id org.chromium.Chromium tabs list
 ```
 
-This will install:
+## Command Surface (v1)
 
-- chrome-cli
-- chrome-canary-cli
-- chromium-cli
-- brave-cli
-- vivaldi-cli
-- edge-cli
-- arc-cli
-
-## JavaScript execution and viewing source
-
-To execute javascript or to view a tab's source you must first enable `View > Developer > Allow JavaScript from Apple Events`.
-More details [here](https://www.chromium.org/developers/applescript). Thanks to @kevinfrommelt and @paulp for providing this information.
-
-## Usage
-
-    chrome-cli -h  (Print help)
-    chrome-cli --help  (Print help)
-    chrome-cli help  (Print help)
-    chrome-cli list windows  (List all windows)
-    chrome-cli list tabs  (List all tabs)
-    chrome-cli list tabs -w <id>  (List tabs in specific window)
-    chrome-cli list links  (List all tabs' link)
-    chrome-cli list links -w <id>  (List tabs' link in specific window)
-    chrome-cli info  (Print info for active tab)
-    chrome-cli info -t <id>  (Print info for specific tab)
-    chrome-cli open <url>  (Open url in new tab)
-    chrome-cli open <url> -n  (Open url in new window)
-    chrome-cli open <url> -i  (Open url in new incognito window)
-    chrome-cli open <url> -t <id>  (Open url in specific tab)
-    chrome-cli open <url> -w <id>  (Open url in new tab in specific window)
-    chrome-cli close  (Close active tab)
-    chrome-cli close -w  (Close active window)
-    chrome-cli close -t <id>  (Close specific tab)
-    chrome-cli close -w <id>  (Close specific window)
-    chrome-cli reload  (Reload active tab)
-    chrome-cli reload -t <id>  (Reload specific tab)
-    chrome-cli back  (Navigate back in active tab)
-    chrome-cli back -t <id>  (Navigate back in specific tab)
-    chrome-cli forward  (Navigate forward in active tab)
-    chrome-cli forward -t <id>  (Navigate forward in specific tab)
-    chrome-cli activate -t <id>  (Activate specific tab)
-    chrome-cli activate -t <id> --focus  (Activate tab and bring its window to the front)
-    chrome-cli activate -t <windowId>:<id>  (Activate specific tab in a specific window — useful with multiple profiles)
-    chrome-cli activate -t <windowId>:<id> --focus  (Activate specific tab and bring that window to the front)
-    chrome-cli presentation  (Enter presentation mode with the active tab)
-    chrome-cli presentation -t <id>  (Enter presentation mode with a specific tab)
-    chrome-cli presentation exit  (Exit presentation mode)
-    chrome-cli size  (Print size of active window)
-    chrome-cli size -w <id>  (Print size of specific window)
-    chrome-cli size <width> <height>  (Set size of active window)
-    chrome-cli size <width> <height> -w <id>  (Set size of specific window)
-    chrome-cli position  (Print position of active window)
-    chrome-cli position -w <id>  (Print position of specific window)
-    chrome-cli position <x> <y>  (Set position of active window)
-    chrome-cli position <x> <y> -w <id>  (Set position of specific window)
-    chrome-cli source  (Print source from active tab)
-    chrome-cli source -t <id>  (Print source from specific tab)
-    chrome-cli execute <javascript>  (Execute javascript in active tab)
-    chrome-cli execute <javascript> -t <id>  (Execute javascript in specific tab)
-    chrome-cli chrome version  (Print Chrome version)
-    chrome-cli version  (Print application version)
-
-#### JSON output
-
-You can set the environment variable `OUTPUT_FORMAT` to json to get json output.
-For example:
-
+```bash
+chrome-cli help
+chrome-cli [--browser <auto|brave|chrome>] [--bundle-id <id>] tabs list
+chrome-cli [--browser <auto|brave|chrome>] [--bundle-id <id>] tabs activate --window-id <id> --tab-id <id>
+chrome-cli [--browser <auto|brave|chrome>] [--bundle-id <id>] tabs close --window-id <id> --tab-id <id>
+chrome-cli [--browser <auto|brave|chrome>] [--bundle-id <id>] tabs switch
+chrome-cli version
 ```
-$ OUTPUT_FORMAT=json chrome-cli list tabs
+
+## Output
+
+Default output is human-readable text.
+Set `OUTPUT_FORMAT=json` to get JSON output.
+
+### `tabs list` (default text)
+
+```text
+[101:1001] README - https://github.com
+```
+
+`tabs list` streams rows and flushes stdout as tabs are discovered.
+
+### `tabs activate` (default text)
+
+```text
+Activated [101:1001]
+```
+
+### `tabs close` (default text)
+
+```text
+Closed [101:1001]
+```
+
+### `tabs switch`
+
+Interactive fuzzy picker powered by `fzf`.
+
+- `Enter`: activate selected tab and keep picker open
+- `Ctrl-X`: close selected tab and reload rows
+- `Ctrl-R`: refresh rows from live tabs (keeps current list until refresh completes)
+- `Ctrl-Y`: copy `<windowId>:<tabId>` to clipboard
+- `Ctrl-U`: copy selected tab URL to clipboard
+- `Esc`, `Ctrl-C`, `Ctrl-D`: quit
+
+`tabs switch` prints no success payload and is intended for TTY usage.
+
+### `version`
+
+```text
+v2.0.0-3-gabc1234
+```
+
+`make build`/`make release` inject version metadata from `git describe --tags --always --dirty`.
+If no git metadata is available, the fallback version is `dev`.
+
+## Error Contract
+
+Runtime errors are emitted as JSON on stderr:
+
+```json
 {
-  "tabs" : [
-    {
-      "id" : 1869578516,
-      "title" : "Lobsters",
-      "url" : "https://lobste.rs/",
-      "windowId" : 1869578514,
-      "windowName" : "Lobsters"
-    }
-  ]
+  "error": {
+    "code": 4,
+    "message": "Could not find tab 1001 in window 101."
+  }
 }
 ```
 
-## Examples
+Exit codes:
 
-###### List tabs
+- `2`: invalid CLI input
+- `3`: browser unavailable
+- `4`: tab/window not found
+- `5`: scripting or automation failure
 
-    $ chrome-cli list tabs
-    [57] Inbox (1) - foo.bar@gmail.com - Gmail
-    [2147] My Drive - Google Drive
-    [2151] GitHub
-    [2161]
-    [2155] Hacker News
+Parser/usage errors (unknown command, missing required args, invalid flags) show usage/help text instead of JSON error payloads.
 
-If you have multiple Chrome windows (e.g., across profiles), tab listings include window ids like:
+## Interactive Dependencies
 
-    [1001:2161] Example Tab Title
+`tabs switch` requires:
 
-You can then activate the tab specifically with:
+- `fzf`
+- `pbcopy`
 
-    chrome-cli activate -t 1001:2161
+## Debug Logging
 
-###### Print tab info
+Set `CHROME_CLI_DEBUG=1` to enable debug logs.
 
-    $ chrome-cli info -t 2161
-    Id: 2162
-    Title:
-    Url: http://httpbin.org/ip
-    Loading: No
+- default log file: `/tmp/chrome-cli.debug.log`
+- override path: `CHROME_CLI_DEBUG_LOG=/path/to/log.txt`
 
-###### Print tab source
+Example:
 
-    $ chrome-cli source -t 2161
-    <html><head></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">{
-      "origin": "1.2.3.4"
-    }</pre></body></html>
+```bash
+CHROME_CLI_DEBUG=1 ./.build/debug/chrome-cli tabs switch
+tail -f /tmp/chrome-cli.debug.log
+```
 
-###### Extract information from page
+## Wrapper Scripts
 
-    $ chrome-cli execute '(function() { var nodes = document.querySelectorAll(".title a"); var titles = []; for (var i = 0; i < 5; i++) { titles.push(nodes[i].innerHTML) } return titles.join("\n"); })();' -t 2155
-    High-Speed Trading Isn't About Efficiency—It's About Cheating
-    The terrifying surveillance case of Brandon Mayfield
-    Google turns on "Download Gmail Archive" feature
-    Learning to Code vs Learning Computer Science
-    Show HN: Crushify.org
+Wrapper scripts in [scripts](scripts) continue to work and now use flags instead of environment variables:
+
+- `brave-cli`
+- `chrome-canary-cli`
+- `chromium-cli`
+- `edge-cli`
+- `vivaldi-cli`
+- `arc-cli`
+
+Each wrapper calls:
+
+```bash
+chrome-cli --bundle-id <target-bundle-id> "$@"
+```
+
+## Homebrew Tap Release Pipeline
+
+This repository includes a GitHub Actions workflow that:
+
+1. runs `swift test`
+2. builds a release binary
+3. creates a GitHub Release for a tag (`vX.Y.Z`)
+4. opens a Homebrew cask bump PR in your tap repo
+
+Workflow file:
+
+- `.github/workflows/ci.yml`
+
+### Required GitHub Configuration
+
+Set these in your repository settings:
+
+1. Repository variable `HOMEBREW_TAP_REPO`:
+`<owner>/<homebrew-tap-repo>` (for example: `lucacome/homebrew-tap`)
+2. Repository secret `HOMEBREW_TAP_GITHUB_TOKEN`:
+a personal access token with `public_repo` + `workflow` scopes
+
+### Triggering a Release
+
+Push a version tag:
+
+```bash
+git tag v2.0.1
+git push origin v2.0.1
+```
+
+The workflow will publish release artifacts and open a cask bump PR in your tap repo.

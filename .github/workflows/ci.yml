@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+env:
+  BINARY_NAME: chrome-cli
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create/Update Draft
+        uses: lucacome/draft-release@v2
+        with:
+          minor-label: "enhancement"
+          major-label: "change"
+          publish: ${{ github.ref_type == 'tag' }}
+          collapse-after: 30
+        if: github.event_name != 'pull_request'
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Test
+        run: make test
+
+      - name: Build binary
+        if: github.ref_type != 'tag'
+        run: make build
+
+      - name: Build release binary
+        if: github.ref_type == 'tag'
+        run: make release
+
+      - name: Package release artifact
+        id: artifact
+        shell: bash
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          TAG="${TAG:-${GITHUB_REF_NAME:-${GITHUB_REF##*/}}}"
+          mkdir -p dist
+          cp ".build/release/${BINARY_NAME}" "dist/${BINARY_NAME}"
+          chmod +x "dist/${BINARY_NAME}"
+          TAR_NAME="${BINARY_NAME}-${TAG}-macos.tar.gz"
+          tar -C dist -czf "dist/${TAR_NAME}" "${BINARY_NAME}"
+          shasum -a 256 "dist/${TAR_NAME}" > "dist/${BINARY_NAME}-${TAG}-macos.sha256.txt"
+
+      - name: Upload binaries on release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref_type == 'tag'
+        run: |
+          gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.sha256.txt --clobber
+
+      - name: Set up Homebrew
+        if: github.ref_type == 'tag'
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Tap Homebrew repository
+        if: github.ref_type == 'tag'
+        run: brew tap lucacome/homebrew-tap
+
+      - name: Bump Homebrew cask
+        if: github.ref_type == 'tag'
+        uses: Homebrew/actions/bump-packages@main
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          casks: lucacome/homebrew-tap/${{ env.BINARY_NAME }}
+          fork: false

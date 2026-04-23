@@ -1,4 +1,3 @@
 #!/bin/bash
 
-export CHROME_BUNDLE_IDENTIFIER="com.google.Chrome.canary"
-chrome-cli "$@"
+chrome-cli --bundle-id "com.google.Chrome.canary" "$@"
