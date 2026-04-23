@@ -163,11 +163,11 @@ This repository includes a GitHub Actions workflow that:
 1. runs `swift test`
 2. builds a release binary
 3. creates a GitHub Release for a tag (`vX.Y.Z`)
-4. updates a Homebrew tap formula (`Formula/chrome-cli.rb`) in your tap repo
+4. opens a Homebrew cask bump PR in your tap repo
 
 Workflow file:
 
-- `.github/workflows/release-homebrew-tap.yml`
+- `.github/workflows/ci.yml`
 
 ### Required GitHub Configuration
 
@@ -176,7 +176,7 @@ Set these in your repository settings:
 1. Repository variable `HOMEBREW_TAP_REPO`:
 `<owner>/<homebrew-tap-repo>` (for example: `lucacome/homebrew-tap`)
 2. Repository secret `HOMEBREW_TAP_GITHUB_TOKEN`:
-a token with `contents:write` access to the tap repository
+a personal access token with `public_repo` + `workflow` scopes
 
 ### Triggering a Release
 
@@ -187,4 +187,4 @@ git tag v2.0.1
 git push origin v2.0.1
 ```
 
-The workflow will publish/update `Formula/chrome-cli.rb` in your tap repo.
+The workflow will publish release artifacts and open a cask bump PR in your tap repo.

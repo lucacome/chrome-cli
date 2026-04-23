@@ -251,7 +251,7 @@ final class ScriptingBridgeTabAutomation: TabAutomating {
         DebugLog.write(
             "automation activateTab: completed without focus confirmation windowId=\(windowId) tabId=\(tabId) bundleId=\(bundleId)"
         )
-        return true
+        return false
     }
 
     func closeTab(windowId: Int, tabId: Int) throws -> Bool {
@@ -429,7 +429,13 @@ private extension NSObject {
         guard responds(to: selector) else {
             return nil
         }
-        return perform(selector)?.takeUnretainedValue()
+
+        let key = selectorName.hasSuffix(":") ? String(selectorName.dropLast()) : selectorName
+        guard !key.isEmpty, !key.contains(":") else {
+            return nil
+        }
+
+        return value(forKey: key)
     }
 
     func codex_invoke(selector selectorName: String) -> Bool {

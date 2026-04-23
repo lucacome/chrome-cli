@@ -61,6 +61,24 @@ final class ScriptingBridgeTabAutomationTests: XCTestCase {
         XCTAssertEqual(window.bringToFrontCalls, 1)
     }
 
+    func testActivateTabReturnsFalseWhenFocusCannotBeConfirmed() throws {
+        let tab = FakeTab(identifier: 10, title: "Brave Tab", url: "https://example.com")
+        let window = NonFocusingWindow(
+            identifier: 7,
+            name: "Brave Window",
+            tabs: [tab]
+        )
+        let browser = FakeBrowser(
+            isRunning: true,
+            windowsResult: [window]
+        )
+
+        let automation = ScriptingBridgeTabAutomation(bundleId: "com.brave.Browser", browser: browser)
+        let activated = try automation.activateTab(windowId: 7, tabId: 10)
+
+        XCTAssertFalse(activated)
+    }
+
     func testActivateTabThrowsBrowserUnavailableWhenBrowserIsNotRunning() {
         let browser = FakeBrowser(isRunning: false, windowsResult: [])
         let automation = ScriptingBridgeTabAutomation(bundleId: "com.brave.Browser", browser: browser)
@@ -149,6 +167,25 @@ private final class FakeWindow: BrowserWindowScripting {
     func bringToFront() {
         bringToFrontCalls += 1
     }
+}
+
+private final class NonFocusingWindow: BrowserWindowScripting {
+    let identifier: Int?
+    let name: String
+    var tabs: [BrowserTabScripting]
+    var activeTabIdentifier: Int? {
+        nil
+    }
+
+    init(identifier: Int?, name: String, tabs: [BrowserTabScripting]) {
+        self.identifier = identifier
+        self.name = name
+        self.tabs = tabs
+    }
+
+    func selectTab(tabId: Int, tabIndex: Int) throws {}
+
+    func bringToFront() {}
 }
 
 private final class FakeTab: BrowserTabScripting {

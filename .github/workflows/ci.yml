@@ -70,3 +70,19 @@ jobs:
         if: github.ref_type == 'tag'
         run: |
           gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.sha256.txt --clobber
+
+      - name: Set up Homebrew
+        if: github.ref_type == 'tag'
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Tap Homebrew repository
+        if: github.ref_type == 'tag'
+        run: brew tap lucacome/homebrew-tap
+
+      - name: Bump Homebrew cask
+        if: github.ref_type == 'tag'
+        uses: Homebrew/actions/bump-packages@main
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          casks: lucacome/homebrew-tap/${{ env.BINARY_NAME }}
+          fork: false
