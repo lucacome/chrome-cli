@@ -7,7 +7,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 ARGS ?=
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-VERSION_FILE ?= Sources/chrome_cli/BuildVersion.generated.swift
+VERSION_FILE ?= Sources/chrome_cli/Generated/BuildVersion.generated.swift
 
 .DEFAULT_GOAL := help
 

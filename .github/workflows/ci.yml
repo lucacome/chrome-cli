@@ -63,9 +63,11 @@ jobs:
           TAG="${TAG:-${GITHUB_REF_NAME:-${GITHUB_REF##*/}}}"
           mkdir -p dist
           cp ".build/release/${BINARY_NAME}" "dist/${BINARY_NAME}"
+          cp -R scripts "dist/scripts"
           chmod +x "dist/${BINARY_NAME}"
+          chmod +x dist/scripts/*-cli
           TAR_NAME="${BINARY_NAME}-${TAG}-macos.tar.gz"
-          tar -C dist -czf "dist/${TAR_NAME}" "${BINARY_NAME}"
+          tar -C dist -czf "dist/${TAR_NAME}" "${BINARY_NAME}" "scripts"
           shasum -a 256 "dist/${TAR_NAME}" > "dist/${BINARY_NAME}-${TAG}-macos.sha256.txt"
 
       - name: Upload binaries on release
@@ -88,5 +90,5 @@ jobs:
         uses: Homebrew/actions/bump-packages@98cfa07b984a61682e6cd3a0833fad2006cc84ba # main
         with:
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          casks: lucacome/homebrew-tap/${{ env.BINARY_NAME }}
+          formulae: lucacome/homebrew-tap/${{ env.BINARY_NAME }}
           fork: false
