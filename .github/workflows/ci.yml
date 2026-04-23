@@ -86,7 +86,7 @@ jobs:
         run: brew tap lucacome/homebrew-tap
 
       - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@v7
+        uses: dawidd6/action-homebrew-bump-formula@1446dca236b0440c6f02723a3f14f13be2c04ab0 # v7
         if: github.ref_type == 'tag'
         with:
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
