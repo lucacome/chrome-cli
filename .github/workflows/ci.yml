@@ -85,10 +85,10 @@ jobs:
         if: github.ref_type == 'tag'
         run: brew tap lucacome/homebrew-tap
 
-      - name: Bump Homebrew cask
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v7
         if: github.ref_type == 'tag'
-        uses: Homebrew/actions/bump-packages@98cfa07b984a61682e6cd3a0833fad2006cc84ba # main
         with:
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          formulae: lucacome/homebrew-tap/${{ env.BINARY_NAME }}
-          fork: false
+          tap: lucacome/homebrew-tap
+          livecheck: true
