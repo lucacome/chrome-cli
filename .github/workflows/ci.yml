@@ -91,4 +91,4 @@ jobs:
         with:
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
           tap: lucacome/homebrew-tap
-          livecheck: true
+          formula: ${{ env.BINARY_NAME }}
