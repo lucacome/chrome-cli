@@ -2,20 +2,20 @@ import XCTest
 @testable import chrome_cli
 
 final class BrowserResolverTests: XCTestCase {
-    func testResolveAutoPrefersBrave() throws {
+    func testResolveAutoPrefersChrome() throws {
         let locator = FakeLocator(installedBundleIDs: ["com.brave.Browser", "com.google.Chrome"])
         let resolver = BrowserResolver(locator: locator)
 
         let target = try resolver.resolve(options: BrowserOptions(browser: .auto, bundleId: nil))
-        XCTAssertEqual(target.bundleId, "com.brave.Browser")
+        XCTAssertEqual(target.bundleId, "com.google.Chrome")
     }
 
-    func testResolveAutoFallsBackToChrome() throws {
-        let locator = FakeLocator(installedBundleIDs: ["com.google.Chrome"])
+    func testResolveAutoFallsBackToBrave() throws {
+        let locator = FakeLocator(installedBundleIDs: ["com.brave.Browser"])
         let resolver = BrowserResolver(locator: locator)
 
         let target = try resolver.resolve(options: BrowserOptions(browser: .auto, bundleId: nil))
-        XCTAssertEqual(target.bundleId, "com.google.Chrome")
+        XCTAssertEqual(target.bundleId, "com.brave.Browser")
     }
 
     func testResolveAutoThrowsWhenNoBrowserIsInstalled() {

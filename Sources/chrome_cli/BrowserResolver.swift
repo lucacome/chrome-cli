@@ -49,11 +49,11 @@ struct BrowserResolver {
 
         switch options.browser {
         case .auto:
-            if locator.isInstalled(bundleIdentifier: braveBundleID) {
-                return BrowserTarget(bundleId: braveBundleID)
-            }
             if locator.isInstalled(bundleIdentifier: chromeBundleID) {
                 return BrowserTarget(bundleId: chromeBundleID)
+            }
+            if locator.isInstalled(bundleIdentifier: braveBundleID) {
+                return BrowserTarget(bundleId: braveBundleID)
             }
             throw CLIError.browserUnavailable("Unable to locate Brave or Chrome on this machine.")
 

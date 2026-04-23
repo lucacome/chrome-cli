@@ -12,6 +12,8 @@ This release is a strict Swift rewrite (SwiftPM only) and uses native Apple Even
 
 ## Build
 
+Use `make` targets so build-time version stamping runs consistently.
+
 ```bash
 make release
 ```
@@ -28,7 +30,7 @@ Binary path:
 
 1. `--bundle-id` (explicit override)
 2. `--browser brave|chrome`
-3. `--browser auto` (default): Brave first, Chrome fallback
+3. `--browser auto` (default): Chrome first, Brave fallback
 
 Examples:
 
@@ -93,6 +95,8 @@ Interactive fuzzy picker powered by `fzf`.
 v2.0.0-3-gabc1234
 ```
 
+Version stamping is Make-driven and happens at build time via a generated source file
+(`Sources/chrome_cli/Generated/BuildVersion.generated.swift`), which is intentionally untracked.
 `make build`/`make release` inject version metadata from `git describe --tags --always --dirty`.
 If no git metadata is available, the fallback version is `dev`.
 
@@ -188,3 +192,8 @@ git push origin v2.0.1
 ```
 
 The workflow will publish release artifacts and open a cask bump PR in your tap repo.
+
+Release tarballs include:
+
+- `chrome-cli`
+- `scripts/` (browser wrapper scripts such as `brave-cli`, `chromium-cli`, and `edge-cli`)

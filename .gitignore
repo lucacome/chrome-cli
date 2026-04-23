@@ -30,3 +30,5 @@ Pods/
 *.1
 
 .vscode
+dist/
+Sources/chrome_cli/Generated/
