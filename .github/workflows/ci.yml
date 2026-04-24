@@ -77,14 +77,6 @@ jobs:
         run: |
           gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.sha256.txt --clobber
 
-      - name: Set up Homebrew
-        if: github.ref_type == 'tag'
-        uses: Homebrew/actions/setup-homebrew@98cfa07b984a61682e6cd3a0833fad2006cc84ba # main
-
-      - name: Tap Homebrew repository
-        if: github.ref_type == 'tag'
-        run: brew tap lucacome/homebrew-tap
-
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@1446dca236b0440c6f02723a3f14f13be2c04ab0 # v7
         if: github.ref_type == 'tag'
