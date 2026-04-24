@@ -51,8 +51,7 @@ final class TabSwitchFZFRunnerTests: XCTestCase {
             $0.contains("tabs close") &&
             $0.contains("--window-id {2}") &&
             $0.contains("--tab-id {3}") &&
-            $0.contains("tabs _switch-source-live") &&
-            $0.contains("+reload-sync(") &&
+            $0.contains("+exclude") &&
             $0.contains("+transform-header(") &&
             $0.contains("tabs _switch-header")
         })

@@ -60,7 +60,7 @@ struct TabSwitchFZFRunner {
             "--bind", "load:reload-sync(\(liveSourceCommand))+transform-header(\(headerCommand))+unbind(load)",
             "--bind", "ctrl-r:reload-sync(\(liveSourceCommand))+transform-header(\(headerCommand))",
             "--bind", "enter:execute-silent(\(activateCommand))",
-            "--bind", "ctrl-x:execute-silent(\(closeCommand))+reload-sync(\(liveSourceCommand))+transform-header(\(headerCommand))",
+            "--bind", "ctrl-x:execute-silent(\(closeCommand))+exclude+transform-header(\(headerCommand))",
             "--bind", "ctrl-y:execute-silent(\(copyIDCommand))",
             "--bind", "ctrl-u:execute-silent(\(copyURLCommand))",
             "--bind", "focus:transform-header(\(headerCommand))",
