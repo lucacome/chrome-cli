@@ -117,6 +117,8 @@ struct TabsCommand: ParsableCommand {
             TabsSwitchCommand.self,
             TabsSwitchSourceCommand.self,
             TabsSwitchSourceLiveCommand.self,
+            TabsSwitchDuplicateSourceCommand.self,
+            TabsSwitchDuplicateSourceLiveCommand.self,
             TabsSwitchHeaderCommand.self,
             TabsSwitchRefreshCommand.self
         ]
@@ -286,6 +288,52 @@ struct TabsSwitchSourceLiveCommand: ParsableCommand {
     }
 }
 
+struct TabsSwitchDuplicateSourceCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "_switch-source-duplicates",
+        abstract: "Internal helper command for duplicate tabs switch source.",
+        shouldDisplay: false
+    )
+
+    @Option(
+        name: .customLong("resolved-bundle-id"),
+        help: ArgumentHelp("Resolved browser bundle id.", visibility: .private)
+    )
+    var resolvedBundleId: String
+
+    func run() throws {
+        DebugLog.write("tabs switch duplicate source command: begin resolvedBundleId=\(resolvedBundleId)")
+        let service = try RuntimeEnvironment.makeTabService(BrowserOptions(browser: .auto, bundleId: resolvedBundleId))
+        let cache = TabSwitchCache(bundleId: service.browserMetadata.bundleId)
+        let source = TabSwitchSource(service: service, cache: cache)
+        try source.emitDuplicateRowsToStdout()
+        DebugLog.write("tabs switch duplicate source command: completed")
+    }
+}
+
+struct TabsSwitchDuplicateSourceLiveCommand: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "_switch-source-duplicates-live",
+        abstract: "Internal helper command for live duplicate tabs switch source.",
+        shouldDisplay: false
+    )
+
+    @Option(
+        name: .customLong("resolved-bundle-id"),
+        help: ArgumentHelp("Resolved browser bundle id.", visibility: .private)
+    )
+    var resolvedBundleId: String
+
+    func run() throws {
+        DebugLog.write("tabs switch duplicate source live command: begin resolvedBundleId=\(resolvedBundleId)")
+        let service = try RuntimeEnvironment.makeTabService(BrowserOptions(browser: .auto, bundleId: resolvedBundleId))
+        let cache = TabSwitchCache(bundleId: service.browserMetadata.bundleId)
+        let source = TabSwitchSource(service: service, cache: cache)
+        try source.emitDuplicateRowsToStdoutLive()
+        DebugLog.write("tabs switch duplicate source live command: completed")
+    }
+}
+
 struct TabsSwitchHeaderCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "_switch-header",
@@ -299,8 +347,14 @@ struct TabsSwitchHeaderCommand: ParsableCommand {
     )
     var resolvedBundleId: String
 
+    @Option(
+        name: .customLong("mode"),
+        help: ArgumentHelp("Tab switch display mode.", visibility: .private)
+    )
+    var mode: String = "all"
+
     func run() throws {
-        let text = TabSwitchHeader.text(bundleId: resolvedBundleId)
+        let text = TabSwitchHeader.text(bundleId: resolvedBundleId, mode: TabSwitchHeader.Mode(rawValue: mode) ?? .all)
         FileHandle.standardOutput.write(Data(text.utf8))
         FileHandle.standardOutput.write(Data("\n".utf8))
         fflush(stdout)

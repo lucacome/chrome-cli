@@ -59,6 +59,27 @@ struct TabSwitchSource {
         )
     }
 
+    func emitDuplicateRowsToStdout() throws {
+        DebugLog.write("tabs switch duplicate source: start bundleId=\(service.browserMetadata.bundleId)")
+        let cachedRows = try cache.readRows()
+        DebugLog.write("tabs switch duplicate source: cachedRows=\(cachedRows.count)")
+
+        if !cachedRows.isEmpty {
+            let duplicateRows = Self.duplicateRows(from: cachedRows)
+            for row in duplicateRows {
+                writeLine(row.tsvLine)
+            }
+            DebugLog.write("tabs switch duplicate source: returning cached duplicate rows emittedRows=\(duplicateRows.count)")
+            return
+        }
+
+        try emitDuplicateRowsToStdoutLive(logPrefix: "tabs switch duplicate source")
+    }
+
+    func emitDuplicateRowsToStdoutLive() throws {
+        try emitDuplicateRowsToStdoutLive(logPrefix: "tabs switch duplicate source live")
+    }
+
     private func emitLiveRows(
         seenCompositeIDs: inout Set<String>,
         emittedRows: inout Int,
@@ -101,6 +122,36 @@ struct TabSwitchSource {
         )
     }
 
+    private func emitDuplicateRowsToStdoutLive(logPrefix: String) throws {
+        DebugLog.write("\(logPrefix): start bundleId=\(service.browserMetadata.bundleId)")
+        var freshRows: [TabSwitchRow] = []
+        var seenCompositeIDs: Set<String> = []
+        var streamedTabs = 0
+
+        try service.streamTabs { tab in
+            streamedTabs += 1
+            let row = TabSwitchRow(tab: tab)
+            if seenCompositeIDs.insert(row.compositeId).inserted {
+                freshRows.append(row)
+            }
+        }
+
+        do {
+            try cache.writeRows(freshRows)
+        } catch {
+            DebugLog.write("\(logPrefix): final cache write failed count=\(freshRows.count) error=\(error.localizedDescription)")
+        }
+
+        let duplicateRows = Self.duplicateRows(from: freshRows)
+        for row in duplicateRows {
+            writeLine(row.tsvLine)
+        }
+
+        DebugLog.write(
+            "\(logPrefix): done streamedTabs=\(streamedTabs) freshRowsForCache=\(freshRows.count) emittedDuplicateRows=\(duplicateRows.count) cachePath=\(cache.fileURL.path)"
+        )
+    }
+
     func refreshCache() throws {
         DebugLog.write("tabs switch refresh: start bundleId=\(service.browserMetadata.bundleId)")
         var freshRows: [TabSwitchRow] = []
@@ -125,5 +176,36 @@ struct TabSwitchSource {
         FileHandle.standardOutput.write(Data(line.utf8))
         FileHandle.standardOutput.write(Data("\n".utf8))
         fflush(stdout)
+    }
+
+    private static func duplicateRows(from rows: [TabSwitchRow]) -> [TabSwitchRow] {
+        var counts: [String: Int] = [:]
+        for row in rows {
+            guard let key = duplicateKey(for: row) else {
+                continue
+            }
+            counts[key, default: 0] += 1
+        }
+
+        return rows.filter { row in
+            guard let key = duplicateKey(for: row) else {
+                return false
+            }
+            return (counts[key] ?? 0) >= 2
+        }
+    }
+
+    private static func duplicateKey(for row: TabSwitchRow) -> String? {
+        let trimmedURL = row.url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedURL.isEmpty else {
+            return nil
+        }
+
+        guard let fragmentIndex = trimmedURL.firstIndex(of: "#") else {
+            return trimmedURL
+        }
+
+        let fragmentlessURL = String(trimmedURL[..<fragmentIndex])
+        return fragmentlessURL.isEmpty ? nil : fragmentlessURL
     }
 }

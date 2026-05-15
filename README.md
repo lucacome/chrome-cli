@@ -83,9 +83,10 @@ Interactive fuzzy picker powered by `fzf`.
 - `Enter`: activate selected tab and keep picker open
 - `Ctrl-X`: close selected tab and reload rows
 - `Ctrl-R`: refresh rows from live tabs (keeps current list until refresh completes)
+- `Ctrl-D`: toggle duplicate-only tabs (URLs matching after removing `#fragment`)
 - `Ctrl-Y`: copy `<windowId>:<tabId>` to clipboard
 - `Ctrl-U`: copy selected tab URL to clipboard
-- `Esc`, `Ctrl-C`, `Ctrl-D`: quit
+- `Esc`, `Ctrl-C`: quit
 
 `tabs switch` prints no success payload and is intended for TTY usage.
 
