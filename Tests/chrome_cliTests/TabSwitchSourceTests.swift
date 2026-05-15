@@ -131,6 +131,99 @@ final class TabSwitchSourceTests: XCTestCase {
         XCTAssertEqual(persisted.map(\ .compositeId), ["2:2"])
     }
 
+    func testDuplicateSourceEmitsDuplicateRowsFromCacheFirst() throws {
+        let temp = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let cache = TabSwitchCache(
+            bundleId: "com.brave.Browser",
+            environment: ["XDG_CACHE_HOME": temp.path]
+        )
+
+        try cache.writeRows([
+            TabSwitchRow(compositeId: "1:1", windowId: 1, tabId: 1, display: "Cached A", url: "https://example.com/page#one"),
+            TabSwitchRow(compositeId: "1:2", windowId: 1, tabId: 2, display: "Cached B", url: "https://example.com/page#two"),
+            TabSwitchRow(compositeId: "1:3", windowId: 1, tabId: 3, display: "Cached C", url: "https://example.com/page?state=1"),
+        ])
+
+        let service = SwitchSourceService(
+            streamedTabs: [
+                TabRecord(windowId: 2, windowName: "W", tabId: 1, title: "Fresh A", url: "https://fresh.example/a"),
+                TabRecord(windowId: 2, windowName: "W", tabId: 2, title: "Fresh B", url: "https://fresh.example/a"),
+            ]
+        )
+
+        var emitted: [String] = []
+        let source = TabSwitchSource(service: service, cache: cache) { line in
+            emitted.append(line)
+        }
+
+        try source.emitDuplicateRowsToStdout()
+
+        XCTAssertEqual(emitted.compactMap { TabSwitchRow.parse(tsvLine: $0)?.compositeId }, ["1:1", "1:2"])
+    }
+
+    func testDuplicateSourceFallsBackToLiveRowsWhenCacheIsEmpty() throws {
+        let temp = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let cache = TabSwitchCache(
+            bundleId: "com.brave.Browser",
+            environment: ["XDG_CACHE_HOME": temp.path]
+        )
+
+        let service = SwitchSourceService(
+            streamedTabs: [
+                TabRecord(windowId: 3, windowName: "W", tabId: 1, title: "A", url: "https://example.com/page#one"),
+                TabRecord(windowId: 3, windowName: "W", tabId: 2, title: "B", url: "https://example.com/page#two"),
+                TabRecord(windowId: 3, windowName: "W", tabId: 3, title: "C", url: "https://example.com/page?state=1"),
+                TabRecord(windowId: 3, windowName: "W", tabId: 4, title: "D", url: ""),
+                TabRecord(windowId: 3, windowName: "W", tabId: 5, title: "E", url: ""),
+            ]
+        )
+
+        var emitted: [String] = []
+        let source = TabSwitchSource(service: service, cache: cache) { line in
+            emitted.append(line)
+        }
+
+        try source.emitDuplicateRowsToStdout()
+
+        XCTAssertEqual(emitted.compactMap { TabSwitchRow.parse(tsvLine: $0)?.compositeId }, ["3:1", "3:2"])
+    }
+
+    func testLiveDuplicateSourceRefreshesAllRowsInCacheWhileEmittingDuplicates() throws {
+        let temp = try makeTempDirectory()
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let cache = TabSwitchCache(
+            bundleId: "com.brave.Browser",
+            environment: ["XDG_CACHE_HOME": temp.path]
+        )
+
+        try cache.writeRows([
+            TabSwitchRow(compositeId: "1:1", windowId: 1, tabId: 1, display: "old", url: "https://old")
+        ])
+
+        let service = SwitchSourceService(
+            streamedTabs: [
+                TabRecord(windowId: 4, windowName: "W", tabId: 1, title: "A", url: "https://example.com/a"),
+                TabRecord(windowId: 4, windowName: "W", tabId: 2, title: "B", url: "https://example.com/a#fragment"),
+                TabRecord(windowId: 4, windowName: "W", tabId: 3, title: "C", url: "https://example.com/a?x=1"),
+            ]
+        )
+
+        var emitted: [String] = []
+        let source = TabSwitchSource(service: service, cache: cache) { line in
+            emitted.append(line)
+        }
+
+        try source.emitDuplicateRowsToStdoutLive()
+
+        XCTAssertEqual(emitted.compactMap { TabSwitchRow.parse(tsvLine: $0)?.compositeId }, ["4:1", "4:2"])
+        XCTAssertEqual(try cache.readRows().map(\ .compositeId), ["4:1", "4:2", "4:3"])
+    }
+
     func testCacheWriteReplacesPreviousRows() throws {
         let temp = try makeTempDirectory()
         defer { try? FileManager.default.removeItem(at: temp) }
