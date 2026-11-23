@@ -78,7 +78,7 @@ jobs:
           gh release upload ${{ github.ref_name }} dist/*.tar.gz dist/*.sha256.txt --clobber
 
       - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@1446dca236b0440c6f02723a3f14f13be2c04ab0 # v7
+        uses: dawidd6/action-homebrew-bump-formula@346ef10bbd55df1c9c70fbaa6b016d26876eefb1 # v11
         if: github.ref_type == 'tag'
         with:
           token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
